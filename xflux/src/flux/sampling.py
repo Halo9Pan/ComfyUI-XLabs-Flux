@@ -108,8 +108,8 @@ def denoise(
     # sampling parameters
     timesteps: list[float],
     guidance: float = 4.0,
-    true_gs = 1,
-    timestep_to_start_cfg=0,
+    neg_strength = 1,
+    step_to_start_neg=0,
     image2image_strength=None,
     orig_image = None,
 ):
@@ -137,7 +137,7 @@ def denoise(
             timesteps=t_vec,
             guidance=guidance_vec,
         )
-        if i >= timestep_to_start_cfg:
+        if i >= step_to_start_neg:
             neg_pred = model(
                 img=img,
                 img_ids=img_ids,
@@ -147,7 +147,7 @@ def denoise(
                 timesteps=t_vec,
                 guidance=guidance_vec,
             )     
-            pred = neg_pred + true_gs * (pred - neg_pred)
+            pred = neg_pred + neg_strength * (pred - neg_pred)
         img = img + (t_prev - t_curr) * pred
         i += 1
     return img
@@ -168,9 +168,9 @@ def denoise_controlnet(
     # sampling parameters
     timesteps: list[float],
     guidance: float = 4.0,
-    true_gs = 1,
+    neg_strength = 1,
     controlnet_gs=0.7,
-    timestep_to_start_cfg=0,
+    step_to_start_neg=0,
     image2image_strength=None,
     orig_image = None,
 ):
@@ -209,7 +209,7 @@ def denoise_controlnet(
             guidance=guidance_vec,
             block_controlnet_hidden_states=[i * controlnet_gs for i in block_res_samples]
         )
-        if i >= timestep_to_start_cfg:
+        if i >= step_to_start_neg:
             neg_block_res_samples = controlnet(
                         img=img,
                         img_ids=img_ids,
@@ -230,8 +230,8 @@ def denoise_controlnet(
                 guidance=guidance_vec,
                 block_controlnet_hidden_states=[i * controlnet_gs for i in neg_block_res_samples]
             )     
-            pred = neg_pred + true_gs * (pred - neg_pred)
-   
+            pred = neg_pred + neg_strength * (pred - neg_pred)
+            
         img = img + (t_prev - t_curr) * pred
 
         i += 1

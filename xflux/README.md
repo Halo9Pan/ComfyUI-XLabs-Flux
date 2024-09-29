@@ -72,7 +72,7 @@ python3 main.py \
  --prompt "Female furry Pixie with text 'hello world'" \
  --lora_repo_id XLabs-AI/flux-furry-lora --lora_name furry_lora.safetensors --device cuda --offload --use_lora \
  --model_type flux-dev-fp8 --width 1024 --height 1024 \
- --timestep_to_start_cfg 1 --num_steps 25 --true_gs 3.5 --guidance 4
+ --step_to_start_neg 1 --num_steps 25 --neg_strength 3.5 --guidance 4
 
 ```
 
@@ -106,7 +106,7 @@ python3 main.py \
  --control_type canny \
  --repo_id XLabs-AI/flux-controlnet-collections --name flux-canny-controlnet.safetensors --device cuda --use_controlnet \
  --model_type flux-dev --width 768 --height 768 \
- --timestep_to_start_cfg 1 --num_steps 25 --true_gs 3.5 --guidance 4
+ --step_to_start_neg 1 --num_steps 25 --neg_strength 3.5 --guidance 4
 
 ```
 ![Example Picture 1](./assets/readme/examples/canny_example_1.png?raw=true)
@@ -119,7 +119,7 @@ python3 main.py \
  --control_type depth \
  --repo_id XLabs-AI/flux-controlnet-collections --name flux-depth-controlnet.safetensors --device cuda --use_controlnet \
  --model_type flux-dev --width 1024 --height 1024 \
- --timestep_to_start_cfg 1 --num_steps 25 --true_gs 3.5 --guidance 4
+ --step_to_start_neg 1 --num_steps 25 --neg_strength 3.5 --guidance 4
 
 ```
 ![Example Picture 2](./assets/readme/examples/depth_example_1.png?raw=true)
@@ -131,7 +131,7 @@ python3 main.py \
  --control_type depth \
  --repo_id XLabs-AI/flux-controlnet-collections --name flux-depth-controlnet.safetensors --device cuda --use_controlnet \
  --model_type flux-dev --width 1024 --height 1024 \
- --timestep_to_start_cfg 1 --num_steps 25 --true_gs 3.5 --guidance 4
+ --step_to_start_neg 1 --num_steps 25 --neg_strength 3.5 --guidance 4
 
 ```
 ![Example Picture 2](./assets/readme/examples/depth_example_2.png?raw=true)
@@ -143,7 +143,7 @@ python3 main.py \
  --control_type depth \
  --repo_id XLabs-AI/flux-controlnet-collections --name flux-depth-controlnet.safetensors --device cuda --use_controlnet \
  --model_type flux-dev --width 1024 --height 1024 \
- --timestep_to_start_cfg 1 --num_steps 25 --true_gs 3.5 --guidance 4
+ --step_to_start_neg 1 --num_steps 25 --neg_strength 3.5 --guidance 4
 
 ```
 ![Example Picture 2](./assets/readme/examples/depth_example_3.png?raw=true)
@@ -157,7 +157,7 @@ python3 main.py \
  --control_type hed \
  --repo_id XLabs-AI/flux-controlnet-collections --name flux-hed-controlnet.safetensors --device cuda --use_controlnet \
  --model_type flux-dev --width 768 --height 768 \
- --timestep_to_start_cfg 1 --num_steps 25 --true_gs 3.5 --guidance 4
+ --step_to_start_neg 1 --num_steps 25 --neg_strength 3.5 --guidance 4
 
 ```
 ![Example Picture 2](./assets/readme/examples/hed_example_1.png?raw=true)
@@ -169,7 +169,7 @@ python3 main.py \
  --control_type hed \
  --repo_id XLabs-AI/flux-controlnet-collections --name flux-hed-controlnet.safetensors --device cuda --use_controlnet \
  --model_type flux-dev --width 768 --height 768 \
- --timestep_to_start_cfg 1 --num_steps 25 --true_gs 3.5 --guidance 4
+ --step_to_start_neg 1 --num_steps 25 --neg_strength 3.5 --guidance 4
 
 ```
 ![Example Picture 2](./assets/readme/examples/hed_example_2.png?raw=true)

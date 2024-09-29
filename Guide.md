@@ -60,9 +60,9 @@ noise_seed, control_after_generate: controls random generator
 
 steps: how many denoise steps will diffusion go
 
-timestep_to_start_cfg: how many steps diffusion will do before start to use negative sampling and cfg
+step_to_start_neg: how many steps diffusion will do before start to use negative sampling and cfg
 
-true_gs: true cfg scale, will be used after first “**timestep_to_start_cfg” steps**
+neg_strength: true cfg scale, will be used after first “**step_to_start_neg” steps**
 
 image_to_image_strength: how much will the original image affect to the output
 

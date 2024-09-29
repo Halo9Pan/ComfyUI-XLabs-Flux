@@ -78,9 +78,9 @@ class XFluxPipeline:
                  height: int = 512,
                  guidance: float = 4,
                  num_steps: int = 50,
-                 true_gs = 3,
+                 neg_strength = 3,
                  neg_prompt: str = '',
-                 timestep_to_start_cfg: int = 0,
+                 step_to_start_neg: int = 0,
                  ):
         width = 16 * width // 16
         height = 16 * height // 16
@@ -90,9 +90,9 @@ class XFluxPipeline:
             controlnet_image = controlnet_image.permute(2, 0, 1).unsqueeze(0).to(torch.bfloat16).to(self.device)
 
         return self.forward(prompt, width, height, guidance, num_steps, controlnet_image,
-         timestep_to_start_cfg=timestep_to_start_cfg, true_gs=true_gs, neg_prompt=neg_prompt)
+         step_to_start_neg=step_to_start_neg, neg_strength=neg_strength, neg_prompt=neg_prompt)
 
-    def forward(self, prompt, width, height, guidance, num_steps, controlnet_image=None, timestep_to_start_cfg=0, true_gs=3, neg_prompt=""):
+    def forward(self, prompt, width, height, guidance, num_steps, controlnet_image=None, step_to_start_neg=0, neg_strength=3, neg_prompt=""):
         x = get_noise(
             1, height, width, device=self.device,
             dtype=torch.bfloat16, seed=self.seed
@@ -117,20 +117,20 @@ class XFluxPipeline:
                     self.model, **inp_cond, controlnet=self.controlnet,
                     timesteps=timesteps, guidance=guidance,
                     controlnet_cond=controlnet_image,
-                    timestep_to_start_cfg=timestep_to_start_cfg,
+                    step_to_start_neg=step_to_start_neg,
                     neg_txt=neg_inp_cond['txt'],
                     neg_txt_ids=neg_inp_cond['txt_ids'],
                     neg_vec=neg_inp_cond['vec'],
-                    true_gs=true_gs,
+                    neg_strength=neg_strength,
                     controlnet_gs=self.controlnet_gs,
                 )
             else:
                 x = denoise(self.model, **inp_cond, timesteps=timesteps, guidance=guidance,
-                    timestep_to_start_cfg=timestep_to_start_cfg,
+                    step_to_start_neg=step_to_start_neg,
                     neg_txt=neg_inp_cond['txt'],
                     neg_txt_ids=neg_inp_cond['txt_ids'],
                     neg_vec=neg_inp_cond['vec'],
-                    true_gs=true_gs
+                    neg_strength=neg_strength
                 )
 
             if self.offload:

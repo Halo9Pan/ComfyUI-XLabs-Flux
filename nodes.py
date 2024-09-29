@@ -210,7 +210,7 @@ def load_checkpoint_controlnet(local_path):
 class LoadFluxControlNet:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {"model_name": (["flux-dev", "flux-dev-fp8", "flux-schnell"],),
+        return {"required": {"model_name": (["flux-dev", "flux-dev-fp8", "flux-schnell", "flux-schnell-fp8"],),
                               "controlnet_path": (folder_paths.get_filename_list("xlabs_controlnets"), ),
                               }}
 
@@ -225,7 +225,7 @@ class LoadFluxControlNet:
         controlnet = load_controlnet(model_name, device)
         checkpoint = load_checkpoint_controlnet(os.path.join(dir_xlabs_controlnets, controlnet_path))
         if checkpoint is not None:
-            controlnet.load_state_dict(checkpoint)
+            controlnet.load_state_dict(checkpoint, strict=False)
             control_type = "canny"
         ret_controlnet = {
             "model": controlnet,
@@ -324,14 +324,16 @@ class XlabsSampler:
                     "neg_conditioning": ("CONDITIONING",),
                     "noise_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                     "steps": ("INT",  {"default": 20, "min": 1, "max": 100}),
-                    "timestep_to_start_cfg": ("INT",  {"default": 20, "min": 0, "max": 100}),
-                    "true_gs": ("FLOAT",  {"default": 3, "min": 0, "max": 100}),
+                    "step_to_start_neg": ("INT",  {"default": 20, "min": 0, "max": 100}),
+                    "neg_strength": ("FLOAT",  {"default": 3, "min": 0, "max": 100}),
                     "image_to_image_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                     "denoise_strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                 },
             "optional": {
                     "latent_image": ("LATENT", {"default": None}),
                     "controlnet_condition": ("ControlNetCondition", {"default": None}),
+                    "controlnet_stride": ("INT",  {"default": 5, "min": 1, "max": 10}),
+                    "controlnet_depth": ("FLOAT",  {"default": 0.25, "min": 0., "max": 1.0, "step": 0.05}),
                 }
             }
     RETURN_TYPES = ("LATENT",)
@@ -340,10 +342,10 @@ class XlabsSampler:
     CATEGORY = "XLabsNodes"
 
     def sampling(self, model, conditioning, neg_conditioning,
-                 noise_seed, steps, timestep_to_start_cfg, true_gs,
-                 image_to_image_strength, denoise_strength,
-                 latent_image=None, controlnet_condition=None
-                 ):
+                noise_seed, steps, step_to_start_neg, neg_strength,
+                image_to_image_strength, denoise_strength,
+                latent_image=None, controlnet_condition=None, controlnet_stride=1, controlnet_depth=0.25
+                ):
         additional_steps = 11 if controlnet_condition is None else 12
         mm.load_model_gpu(model)
         inmodel = model.model
@@ -382,9 +384,14 @@ class XlabsSampler:
             orig_x=lat_processor2.go_back(orig_x)
             orig_x=orig_x.to(device, dtype=dtype_model)
 
-        
+        timesteps_shift = inmodel.diffusion_model.params.guidance_embed
         timesteps = get_schedule(
             steps,
+            (width // 8) * (height // 8) // 4,
+            shift=timesteps_shift,
+        )
+        controlnet_timesteps = get_schedule(
+            steps * controlnet_stride,
             (width // 8) * (height // 8) // 4,
             shift=True,
         )
@@ -410,11 +417,11 @@ class XlabsSampler:
         if controlnet_condition is None:
             x = denoise(
                 inmodel.diffusion_model, **inp_cond, timesteps=timesteps, guidance=guidance,
-                timestep_to_start_cfg=timestep_to_start_cfg,
+                step_to_start_neg=step_to_start_neg,
                 neg_txt=neg_inp_cond['txt'],
                 neg_txt_ids=neg_inp_cond['txt_ids'],
                 neg_vec=neg_inp_cond['vec'],
-                true_gs=true_gs,
+                neg_strength=neg_strength,
                 image2image_strength=image_to_image_strength,
                 orig_image=orig_x,
                 callback=callback,
@@ -458,13 +465,16 @@ class XlabsSampler:
             x = denoise_controlnet(
                 inmodel.diffusion_model, **inp_cond, 
                 controlnets_container=containers,
-                timesteps=timesteps, guidance=guidance,
+                controlnet_timesteps=controlnet_timesteps,
+                controlnet_depth=controlnet_depth,
+                timesteps=timesteps,
+                guidance=guidance,
                 #controlnet_cond=controlnet_image,
-                timestep_to_start_cfg=timestep_to_start_cfg,
+                step_to_start_neg=step_to_start_neg,
                 neg_txt=neg_inp_cond['txt'],
                 neg_txt_ids=neg_inp_cond['txt_ids'],
                 neg_vec=neg_inp_cond['vec'],
-                true_gs=true_gs,
+                neg_strength=neg_strength,
                 #controlnet_gs=controlnet_strength,
                 image2image_strength=image_to_image_strength,
                 orig_image=orig_x,
